@@ -1,11 +1,13 @@
 package com.mudra;
 
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -64,8 +66,8 @@ public class UserRequestHandler implements Callable<String> {
 	 */
 	@Override
 	public String call() throws Exception {
-		// return sequentialCall();
-		return concurrentCallCompletableFuture();
+		return sequentialCall();
+		// return concurrentCallCompletableFuture();
 		// return concurrentCallFunctional();
     // return concurrentCallWithFutures();
 		
@@ -103,7 +105,8 @@ public class UserRequestHandler implements Callable<String> {
 	 * NOTE: Even with virtual threads, CompletableFuture is still useful
 	 * for composing operations and expressing dependencies clearly!
 	 */
-	private String concurrentCallCompletableFuture() {
+	private String concurrentCallCompletableFuture() throws Exception {
+    System.out.println("concurrentCallCompletableFuture: " + Thread.currentThread().getName());
 		try (ExecutorService service = Executors.newVirtualThreadPerTaskExecutor()) {
 			
 			String output = CompletableFuture
@@ -120,7 +123,7 @@ public class UserRequestHandler implements Callable<String> {
 									return "[" + result + "," + r + "]";
 									
 								})
-								.join();
+                .get(5, TimeUnit.SECONDS);
 			
 			log(output);
 			return output;
@@ -162,6 +165,7 @@ public class UserRequestHandler implements Callable<String> {
 	 * @throws Exception if invokeAll fails
 	 */
 	private String concurrentCallFunctional() throws Exception {
+    System.out.println("concurrentCallFunctional");
 		try (ExecutorService service = Executors.newVirtualThreadPerTaskExecutor()) {
 			
 			String result = service.invokeAll(Arrays.asList(this::dbCall, this::restCall))
@@ -220,6 +224,7 @@ public class UserRequestHandler implements Callable<String> {
 	 * @throws Exception if any task fails
 	 */
 	private String concurrentCallWithFutures() throws Exception {
+    System.out.println("concurrentCallWithFutures");
 		try (ExecutorService service = Executors.newVirtualThreadPerTaskExecutor()) {
 			
 			long start = System.currentTimeMillis();
@@ -274,10 +279,12 @@ public class UserRequestHandler implements Callable<String> {
 	 * @throws Exception if any operation fails
 	 */
 	private String sequentialCall() throws Exception {
+    System.out.println("sequentialCall");
 		long start = System.currentTimeMillis();
 		
 		String result1 = dbCall(); // 2 secs
 		String result2 = restCall();  // 5 secs
+    Thread.sleep(Duration.ofMinutes(10));
 		
 		String result = String.format("[%s,%s]", result1, result2);
 		
@@ -301,7 +308,7 @@ public class UserRequestHandler implements Callable<String> {
 	private String dbCall() {
 		try {
 			NetworkCaller caller = new NetworkCaller("data");
-			return caller.makeCall(2);
+			return caller.makeCall(1);
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -323,7 +330,7 @@ public class UserRequestHandler implements Callable<String> {
 	private String restCall() {
 		try {
 			NetworkCaller caller = new NetworkCaller("rest");
-			return caller.makeCall(5);
+			return caller.makeCall(2);
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -356,8 +363,9 @@ public class UserRequestHandler implements Callable<String> {
 	}
 
   private void log(String message) {
-    System.out.println("[" + Thread.currentThread().getName() + "] " + message);
-}
+    // System.out.println("[" + Thread.currentThread().getName() + "] " + message);
+    System.out.println("[" + Thread.currentThread().getName() + "] ");
+  }
 
 	
 }

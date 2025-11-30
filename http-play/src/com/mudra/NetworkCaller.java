@@ -52,7 +52,7 @@ public class NetworkCaller {
 		
 		// Print thread info BEFORE the I/O operation
 		// You'll see the virtual thread is mounted on a carrier thread
-		System.out.println(callName + " : BEG call : " + Thread.currentThread().getName());
+		System.out.println(callName + " : BEG call : " + Thread.currentThread());
 		
 		try {
 			// This HTTP call is BLOCKING - the virtual thread will wait for response
@@ -68,7 +68,7 @@ public class NetworkCaller {
 		finally {
 			// Print thread info AFTER the I/O operation
 			// Notice: the virtual thread might be on a different carrier thread now!
-			System.out.println(callName + " : END call : " + Thread.currentThread().getName());
+			System.out.println(callName + " : END call : " + Thread.currentThread());
 		}
 		
 		// KEY INSIGHT:

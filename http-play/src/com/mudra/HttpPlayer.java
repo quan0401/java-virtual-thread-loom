@@ -37,7 +37,7 @@ public class HttpPlayer {
 	// TIP: Try increasing this to 1000+ to see virtual threads scale!
 	// With platform threads, this would consume ~2GB+ memory
 	// With virtual threads, it's only ~1MB
-	private static final int NUM_USERS = 2000;
+	private static final int NUM_USERS = 1000;
 	
 	@SuppressWarnings("preview")
 	public static void main(String[] args) {
@@ -45,11 +45,14 @@ public class HttpPlayer {
 		// Create a virtual thread factory with custom naming
 		// Each thread will be named: request-handler-0, request-handler-1, etc.
 		// This helps with debugging and monitoring
-		ThreadFactory factory = Thread.ofVirtual().name("virtual-request", 0).factory();
+		ThreadFactory factory = Thread.ofVirtual().name("request-handler", 0).factory();
+		// ThreadFactory factory = Thread.ofPlatform().name("request-handler", 0).factory();
 		
 		// Create an ExecutorService that creates one virtual thread per task
 		// The try-with-resources ensures all threads complete before exiting
+    long start = System.currentTimeMillis();
 		try (ExecutorService executor = Executors.newThreadPerTaskExecutor(factory)) {
+		// try (ExecutorService executor = Executors.newFixedThreadPool(500, factory)) {
 			
 			// Submit a task for each user
 			// Each task runs in its own virtual thread
@@ -60,9 +63,9 @@ public class HttpPlayer {
 			// When the try block exits, executor.close() is called automatically
 			// This waits for all submitted tasks to complete
 		}
-		
-		System.out.println("All user requests completed!");
-		
+    long end = System.currentTimeMillis();
+
+    System.out.println("Total execution time = " + (end - start) + " ms");
 		// EXERCISE: Try changing NUM_USERS to 10000 and observe:
 		// 1. All requests still complete successfully
 		// 2. Memory usage remains low
